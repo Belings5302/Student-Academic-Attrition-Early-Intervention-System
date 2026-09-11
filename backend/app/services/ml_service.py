@@ -99,15 +99,27 @@ class MLService:
 
         risk_label = self.label_encoder.inverse_transform([prediction])[0]
 
-        # Get probability indices
+        display_map = {
+            "VERY_LOW": "Very Low (Critical)",
+            "LOW": "Low",
+            "MID": "Mid (Average)",
+            "HIGH": "High",
+            "VERY_HIGH": "Very High",
+        }
         classes = list(self.label_encoder.classes_)
-        at_risk_idx = classes.index("AT_RISK") if "AT_RISK" in classes else 0
-        low_idx = classes.index("LOW") if "LOW" in classes else 1
+        prob_dict = {cls_name: float(probabilities[idx]) for idx, cls_name in enumerate(classes)}
+
+        # Aggregated risk vs safe probability for legacy callers
+        at_risk_prob = prob_dict.get("VERY_LOW", 0.0) + prob_dict.get("LOW", 0.0)
+        low_prob = prob_dict.get("HIGH", 0.0) + prob_dict.get("VERY_HIGH", 0.0)
 
         return {
             "risk_level": risk_label,
-            "at_risk_probability": float(probabilities[at_risk_idx]),
-            "low_probability": float(probabilities[low_idx]),
+            "display_label": display_map.get(risk_label, risk_label),
+            "tier": risk_label,
+            "probabilities": prob_dict,
+            "at_risk_probability": float(at_risk_prob),
+            "low_probability": float(low_prob),
             "model_name": self.metadata["model_name"],
         }
 

@@ -7,7 +7,8 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_DIR = os.path.dirname(BASE_DIR)
 MODELS_DIR = os.path.join(PROJECT_DIR, "data_science", "models")
-DATA_FILE = os.path.join(PROJECT_DIR, "Student_Academic_Risk_Dataset_120_Year1_Semester1.xlsx")
+balanced_file = os.path.join(PROJECT_DIR, "Student_Academic_Risk_Dataset_Balanced.xlsx")
+DATA_FILE = balanced_file if os.path.exists(balanced_file) else os.path.join(PROJECT_DIR, "Student_Academic_Risk_Dataset_120_Year1_Semester1.xlsx")
 RAW_DATA_PATH = DATA_FILE
 
 # --- Database ---

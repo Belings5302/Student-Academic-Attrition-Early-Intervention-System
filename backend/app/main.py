@@ -45,7 +45,7 @@ def seed_database_if_empty():
                     previous_failed_courses=int(row["Previous_Failed_Courses"]) if pd.notna(row.get("Previous_Failed_Courses")) else 0,
                     final_exam_score=float(row["Final_Exam_Score"]) if pd.notna(row.get("Final_Exam_Score")) else None,
                     final_result=str(row["Final_Result"]) if pd.notna(row.get("Final_Result")) else None,
-                    academic_risk="AT_RISK" if str(row.get("Academic_Risk", "")).upper() in ["HIGH", "MEDIUM", "AT_RISK"] else "LOW",
+                    academic_risk=str(row.get("Academic_Risk", "MID")).upper(),
                 )
                 db.add(student)
             db.commit()

@@ -148,22 +148,79 @@ class InterventionService:
                 ]
             })
 
-        # 5. General Low-Risk / High-Performing Reinforcement
-        if risk_level == "LOW" and not interventions:
+        # 5. Tier-Specific Guidance
+        if risk_level == "VERY_LOW":
+            interventions.insert(0, {
+                "id": "INT-TIER-CRITICAL",
+                "category": "Crisis Intervention",
+                "priority": "CRITICAL",
+                "title": "Immediate Dean & Faculty Academic Emergency Review",
+                "description": "Student is in the Very Low / Critical Attrition tier. Immediate high-priority intervention is mandated to prevent course failure and university drop-out.",
+                "responsible_stakeholder": "Dean of Faculty & Senior Academic Counselor",
+                "timeline": "Immediate (Within 24 Hours)",
+                "action_items": [
+                    "Issue formal urgent academic notification to student and academic advisor",
+                    "Conduct mandatory 1-on-1 counseling to evaluate study habits and personal challenges",
+                    "Institute comprehensive remedial tutoring contract"
+                ]
+            })
+        elif risk_level == "LOW":
+            interventions.insert(0, {
+                "id": "INT-TIER-LOW",
+                "category": "Targeted Academic Coaching",
+                "priority": "HIGH",
+                "title": "Subject-Specific Tutoring & Bi-Weekly Progress Coaching",
+                "description": "Student is below standard performance benchmarks and at notable risk of failing without structured academic support.",
+                "responsible_stakeholder": "Course Lecturer & Peer Tutor Coordinator",
+                "timeline": "Within 3 days",
+                "action_items": [
+                    "Enroll in bi-weekly subject tutoring clinics",
+                    "Review assignment and test problem sets with teaching assistant",
+                    "Submit bi-weekly self-assessment progress reports"
+                ]
+            })
+        elif risk_level == "MID":
             interventions.append({
-                "id": "INT-EXCELLENCE",
+                "id": "INT-TIER-MID",
+                "category": "Performance Optimization",
+                "priority": "MEDIUM",
+                "title": "Active Learning Circles & Formative Exam Prep",
+                "description": "Student is maintaining satisfactory / average standing but has room to elevate to honors or avoid slipping into risk zones.",
+                "responsible_stakeholder": "Academic Advisor / Peer Mentor",
+                "timeline": "Within 7 days",
+                "action_items": [
+                    "Join departmental collaborative study group",
+                    "Attend scheduled midterm exam preparation workshops",
+                    "Access supplemental practice problem repositories"
+                ]
+            })
+        elif risk_level == "HIGH":
+            interventions.append({
+                "id": "INT-TIER-HIGH",
                 "category": "Academic Enrichment",
                 "priority": "LOW",
-                "title": "Peer Mentorship & Honors Encouragement",
-                "description": (
-                    f"Student demonstrates solid academic standing (CA {ca_score:.1f}%, Attendance {attendance:.1f}%). "
-                    "Encourage peer tutoring participation and advanced research opportunities."
-                ),
-                "responsible_stakeholder": "Department Coordinator",
+                "title": "Advanced Elective & Career Mentorship Track",
+                "description": f"Student demonstrates strong academic performance (CA {ca_score:.1f}%, Attendance {attendance:.1f}%). Support career exploration and advanced track electives.",
+                "responsible_stakeholder": "Department Coordinator & Industry Liaison",
+                "timeline": "Ongoing / Midterm",
+                "action_items": [
+                    "Provide information on specialized track electives and industry certifications",
+                    "Invite to departmental guest lectures and networking events"
+                ]
+            })
+        elif risk_level == "VERY_HIGH":
+            interventions.append({
+                "id": "INT-TIER-VERY-HIGH",
+                "category": "Honors & Leadership",
+                "priority": "LOW",
+                "title": "Dean's List Recognition & Peer Tutoring Leadership",
+                "description": f"Exemplary performance across all metrics (CA {ca_score:.1f}%, Attendance {attendance:.1f}%). Student is an honors candidate.",
+                "responsible_stakeholder": "Dean of Faculty & Honors Committee",
                 "timeline": "End of semester",
                 "action_items": [
-                    "Invite to participate as undergraduate peer tutor next semester",
-                    "Provide information on departmental research symposium"
+                    "Nominate for Dean's Commendation and Academic Excellence Award",
+                    "Invite to lead peer study sessions and serve as teaching fellow assistant",
+                    "Recommend for faculty-mentored research lab opportunities"
                 ]
             })
 

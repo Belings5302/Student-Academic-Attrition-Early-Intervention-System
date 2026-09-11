@@ -11,6 +11,7 @@ import {
   GraduationCap,
   Sparkles,
   ArrowUpRight,
+  ArrowRight,
   Clock,
   ChevronRight,
   Layers,
@@ -177,6 +178,85 @@ export default function DashboardPage() {
             <span>Exam threshold: 75.0%</span>
           </div>
         </div>
+      </div>
+
+      {/* 5-Tier Academic Risk & Performance Distribution */}
+      <div className="card" style={{ marginBottom: '2rem', padding: '1.25rem 1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sparkles size={18} color="#818CF8" />
+              <span>5-Tier Cohort Risk & Academic Performance Breakdown</span>
+            </div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              Distribution across all {summary?.total_enrollments || 1000} course enrollments
+            </div>
+          </div>
+          <Link href="/students" className="btn btn-secondary btn-sm" style={{ gap: '0.35rem' }}>
+            <span>Explore Directory</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        {/* 5-Segment Progress Bar */}
+        {(() => {
+          const total = summary?.total_enrollments || 1000;
+          const vl = summary?.very_low_count || 0;
+          const l = summary?.low_count || 0;
+          const m = summary?.mid_count || 0;
+          const h = summary?.high_count || 0;
+          const vh = summary?.very_high_count || 0;
+
+          const vlPct = (vl / total * 100).toFixed(1);
+          const lPct = (l / total * 100).toFixed(1);
+          const mPct = (m / total * 100).toFixed(1);
+          const hPct = (h / total * 100).toFixed(1);
+          const vhPct = (vh / total * 100).toFixed(1);
+
+          return (
+            <div>
+              <div style={{ height: '14px', borderRadius: 'var(--radius-full)', display: 'flex', overflow: 'hidden', background: 'rgba(255,255,255,0.08)', marginBottom: '1rem' }}>
+                <div style={{ width: `${vlPct}%`, background: '#EF4444', transition: 'width 0.6s ease' }} title={`Very Low (Critical): ${vl} (${vlPct}%)`}></div>
+                <div style={{ width: `${lPct}%`, background: '#F97316', transition: 'width 0.6s ease' }} title={`Low: ${l} (${lPct}%)`}></div>
+                <div style={{ width: `${mPct}%`, background: '#F59E0B', transition: 'width 0.6s ease' }} title={`Mid (Average): ${m} (${mPct}%)`}></div>
+                <div style={{ width: `${hPct}%`, background: '#10B981', transition: 'width 0.6s ease' }} title={`High: ${h} (${hPct}%)`}></div>
+                <div style={{ width: `${vhPct}%`, background: '#06B6D4', transition: 'width 0.6s ease' }} title={`Very High: ${vh} (${vhPct}%)`}></div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.85rem' }}>
+                <div style={{ background: 'var(--bg-glass-strong)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid #EF4444' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>🔴 Very Low (Critical)</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#EF4444', fontFamily: 'var(--font-mono)' }}>{vl} <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-muted)' }}>({vlPct}%)</span></div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Immediate Emergency</div>
+                </div>
+
+                <div style={{ background: 'var(--bg-glass-strong)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid #F97316' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>🟠 Low (Notable Risk)</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#F97316', fontFamily: 'var(--font-mono)' }}>{l} <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-muted)' }}>({lPct}%)</span></div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Subject Tutoring</div>
+                </div>
+
+                <div style={{ background: 'var(--bg-glass-strong)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid #F59E0B' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>🟡 Mid (Average)</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#F59E0B', fontFamily: 'var(--font-mono)' }}>{m} <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-muted)' }}>({mPct}%)</span></div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Peer Study Circles</div>
+                </div>
+
+                <div style={{ background: 'var(--bg-glass-strong)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid #10B981' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>🟢 High (Strong)</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#10B981', fontFamily: 'var(--font-mono)' }}>{h} <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-muted)' }}>({hPct}%)</span></div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Academic Enrichment</div>
+                </div>
+
+                <div style={{ background: 'var(--bg-glass-strong)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', borderLeft: '4px solid #06B6D4' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>🔵 Very High (Honors)</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#06B6D4', fontFamily: 'var(--font-mono)' }}>{vh} <span style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-muted)' }}>({vhPct}%)</span></div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Dean's Recognition</div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Analytics Grid: Programme Breakdown & Feature Drivers */}

@@ -18,6 +18,19 @@ import {
   FileText
 } from 'lucide-react';
 
+const TIER_META = {
+  VERY_LOW: { label: 'Very Low (Critical)', badgeClass: 'tier-very-low', color: '#EF4444', icon: '🔴' },
+  LOW: { label: 'Low', badgeClass: 'tier-low', color: '#F97316', icon: '🟠' },
+  MID: { label: 'Mid (Average)', badgeClass: 'tier-mid', color: '#F59E0B', icon: '🟡' },
+  HIGH: { label: 'High', badgeClass: 'tier-high', color: '#10B981', icon: '🟢' },
+  VERY_HIGH: { label: 'Very High', badgeClass: 'tier-very-high', color: '#06B6D4', icon: '🔵' },
+};
+
+const getTier = (val) => {
+  const norm = String(val || 'MID').toUpperCase();
+  return TIER_META[norm] || { label: norm, badgeClass: 'tier-mid', color: '#F59E0B', icon: '⚪' };
+};
+
 export default function StudentsPage() {
   const [students, setStudents] = useState([]);
   const [total, setTotal] = useState(0);
@@ -129,28 +142,24 @@ export default function StudentsPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>Risk Filter:</span>
+        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>Tiers:</span>
           <button
             onClick={() => { setRiskFilter(''); setPage(1); }}
             className={`btn btn-sm ${riskFilter === '' ? 'btn-primary' : 'btn-secondary'}`}
           >
             All
           </button>
-          <button
-            onClick={() => { setRiskFilter('AT_RISK'); setPage(1); }}
-            className={`btn btn-sm ${riskFilter === 'AT_RISK' ? 'btn-primary' : 'btn-secondary'}`}
-            style={riskFilter === 'AT_RISK' ? { background: 'var(--risk-critical)', borderColor: 'var(--risk-critical)' } : {}}
-          >
-            At-Risk
-          </button>
-          <button
-            onClick={() => { setRiskFilter('LOW'); setPage(1); }}
-            className={`btn btn-sm ${riskFilter === 'LOW' ? 'btn-primary' : 'btn-secondary'}`}
-            style={riskFilter === 'LOW' ? { background: 'var(--risk-low)', borderColor: 'var(--risk-low)' } : {}}
-          >
-            Low Risk
-          </button>
+          {Object.entries(TIER_META).map(([key, meta]) => (
+            <button
+              key={key}
+              onClick={() => { setRiskFilter(key); setPage(1); }}
+              className={`btn btn-sm ${riskFilter === key ? 'btn-primary' : 'btn-secondary'}`}
+              style={riskFilter === key ? { background: meta.color, borderColor: meta.color, color: '#fff' } : {}}
+            >
+              {meta.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -166,7 +175,7 @@ export default function StudentsPage() {
                 <th>CA Score</th>
                 <th>Attendance</th>
                 <th>Course Load</th>
-                <th>Risk Status</th>
+                <th>5-Tier Risk Standing</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -186,9 +195,10 @@ export default function StudentsPage() {
                 </tr>
               ) : (
                 students.map((s) => {
-                  const isRisk = s.academic_risk === 'AT_RISK';
+                  const tier = getTier(s.academic_risk);
+                  const isCritical = s.academic_risk === 'VERY_LOW' || s.academic_risk === 'LOW';
                   return (
-                    <tr key={s.id} className={isRisk ? 'row-danger' : ''}>
+                    <tr key={s.id} className={isCritical ? 'row-danger' : ''}>
                       <td>
                         <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                           {s.student_id}
@@ -210,7 +220,7 @@ export default function StudentsPage() {
                       </td>
                       <td>
                         <span
-                          className={`badge ${s.ca_score < 40 ? 'danger' : s.ca_score < 50 ? 'warning' : 'success'}`}
+                          className={`badge ${s.ca_score < 40 ? 'danger' : s.ca_score < 55 ? 'warning' : 'success'}`}
                           style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}
                         >
                           {s.ca_score.toFixed(1)}%
@@ -218,7 +228,7 @@ export default function StudentsPage() {
                       </td>
                       <td>
                         <span
-                          className={`badge ${s.attendance_percentage < 60 ? 'danger' : s.attendance_percentage < 75 ? 'warning' : 'success'}`}
+                          className={`badge ${s.attendance_percentage < 55 ? 'danger' : s.attendance_percentage < 70 ? 'warning' : 'success'}`}
                           style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}
                         >
                           {s.attendance_percentage.toFixed(1)}%
@@ -228,8 +238,8 @@ export default function StudentsPage() {
                         <span className="badge neutral">{s.number_of_courses} Courses</span>
                       </td>
                       <td>
-                        <span className={`badge ${isRisk ? 'danger' : 'success'}`}>
-                          {isRisk ? '🔴 AT RISK' : '🟢 LOW RISK'}
+                        <span className={`badge ${tier.badgeClass}`}>
+                          {tier.icon} {tier.label}
                         </span>
                       </td>
                       <td>
@@ -302,20 +312,30 @@ export default function StudentsPage() {
                 {/* Dossier Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
                       <span className="badge primary" style={{ fontFamily: 'var(--font-mono)' }}>
                         ID: {dossierData.student_id}
                       </span>
-                      <span className={`badge ${dossierData.current_prediction?.risk_level === 'AT_RISK' ? 'danger' : 'success'}`}>
-                        {dossierData.current_prediction?.risk_level === 'AT_RISK' ? 'FLIGHT / ATTRITION RISK' : 'STABLE STANDING'}
-                      </span>
+                      {(() => {
+                        const t = getTier(dossierData.current_prediction?.risk_level);
+                        return (
+                          <span className={`badge ${t.badgeClass}`}>
+                            {t.icon} Overall Standing: {dossierData.current_prediction?.display_label || t.label}
+                          </span>
+                        );
+                      })()}
                     </div>
                     <h2 style={{ fontSize: '1.6rem', fontWeight: 700 }}>
-                      Academic Dossier & Intervention Profile
+                      5-Tier Academic Dossier & Early Intervention Profile
                     </h2>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
-                      {dossierData.programme} • {dossierData.gender} • Year {dossierData.academic_year}
+                      {dossierData.programme} • {dossierData.gender} • Year {dossierData.academic_year} • Semester Mean CA: {dossierData.average_ca}% • Mean Att: {dossierData.average_attendance}%
                     </p>
+                    {dossierData.vulnerable_courses_count > 0 && (
+                      <div style={{ marginTop: '0.65rem', padding: '0.65rem 0.9rem', background: 'rgba(249, 115, 22, 0.12)', border: '1px solid rgba(249, 115, 22, 0.35)', borderRadius: 'var(--radius-sm)', fontSize: '0.84rem', color: 'var(--text-primary)' }}>
+                        ⚠️ <strong>Targeted Vulnerability:</strong> Student maintains satisfactory overall standing ({dossierData.average_ca}% CA), but targeted support is recommended for {dossierData.vulnerable_courses_count} course(s): {dossierData.vulnerable_courses.map(c => `${c.course_id} (${c.risk})`).join(', ')}.
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => setDossierStudentId(null)}
@@ -326,6 +346,28 @@ export default function StudentsPage() {
                   </button>
                 </div>
 
+                {/* 5-Tier Probabilities Grid */}
+                {dossierData.current_prediction?.probabilities && (
+                  <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1.1rem', background: 'var(--bg-glass-strong)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Model Confidence Across 5 Tiers
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.65rem' }}>
+                      {Object.entries(dossierData.current_prediction.probabilities).map(([tierKey, prob]) => {
+                        const t = getTier(tierKey);
+                        return (
+                          <div key={tierKey} style={{ background: 'var(--bg-secondary)', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-sm)', borderLeft: `3px solid ${t.color}` }}>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{t.label}</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: t.color, fontFamily: 'var(--font-mono)' }}>
+                              {(prob * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Course Enrollments Section */}
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <GraduationCap size={18} color="#818CF8" />
@@ -334,13 +376,14 @@ export default function StudentsPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.75rem' }}>
                   {dossierData.enrollments?.map((e) => {
-                    const isCourseRisk = e.academic_risk === 'AT_RISK';
+                    const courseTier = getTier(e.academic_risk);
+                    const isCourseCritical = e.academic_risk === 'VERY_LOW' || e.academic_risk === 'LOW';
                     return (
                       <div
                         key={e.id}
                         style={{
                           background: 'var(--bg-glass-strong)',
-                          border: isCourseRisk ? '1px solid var(--risk-critical-border)' : '1px solid var(--border-subtle)',
+                          border: isCourseCritical ? `1px solid ${courseTier.color}` : '1px solid var(--border-subtle)',
                           borderRadius: 'var(--radius-md)',
                           padding: '1rem 1.25rem',
                           display: 'flex',
@@ -360,7 +403,7 @@ export default function StudentsPage() {
                         <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
                           <div style={{ textAlign: 'right' }}>
                             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>CA Score</div>
-                            <div style={{ fontWeight: 700, color: e.ca_score < 50 ? '#F87171' : '#34D399', fontFamily: 'var(--font-mono)' }}>
+                            <div style={{ fontWeight: 700, color: e.ca_score < 55 ? '#F87171' : '#34D399', fontFamily: 'var(--font-mono)' }}>
                               {e.ca_score.toFixed(1)}%
                             </div>
                           </div>
@@ -373,8 +416,8 @@ export default function StudentsPage() {
                           </div>
 
                           <div>
-                            <span className={`badge ${isCourseRisk ? 'danger' : 'success'}`}>
-                              {isCourseRisk ? 'AT RISK' : 'PASSING'}
+                            <span className={`badge ${courseTier.badgeClass}`}>
+                              {courseTier.icon} {courseTier.label}
                             </span>
                           </div>
                         </div>

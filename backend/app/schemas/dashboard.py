@@ -8,20 +8,30 @@ from pydantic import BaseModel
 class DashboardSummary(BaseModel):
     total_students: int
     total_enrollments: int
-    at_risk_count: int
-    low_risk_count: int
-    at_risk_rate: float
-    average_ca_score: float
-    average_attendance: float
-    high_urgency_interventions: int
+    very_low_count: int = 0
+    low_count: int = 0
+    mid_count: int = 0
+    high_count: int = 0
+    very_high_count: int = 0
+    at_risk_count: int = 0
+    low_risk_count: int = 0
+    at_risk_rate: float = 0.0
+    average_ca_score: float = 0.0
+    average_attendance: float = 0.0
+    high_urgency_interventions: int = 0
 
 
 class RiskByProgramme(BaseModel):
     programme: str
     total: int
-    at_risk: int
-    low_risk: int
-    risk_percentage: float
+    very_low: int = 0
+    low: int = 0
+    mid: int = 0
+    high: int = 0
+    very_high: int = 0
+    at_risk: int = 0
+    low_risk: int = 0
+    risk_percentage: float = 0.0
 
 
 class RiskByCourse(BaseModel):

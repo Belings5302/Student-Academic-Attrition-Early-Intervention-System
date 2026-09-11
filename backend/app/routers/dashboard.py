@@ -39,22 +39,32 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         )
 
     distinct_students = db.query(func.count(func.distinct(Student.student_id))).scalar() or 0
-    at_risk_count = db.query(Student).filter(Student.academic_risk == "AT_RISK").count()
-    low_risk_count = total_enrollments - at_risk_count
+
+    # 5-tier counts
+    very_low_count = db.query(Student).filter(Student.academic_risk == "VERY_LOW").count()
+    low_count = db.query(Student).filter(Student.academic_risk == "LOW").count()
+    mid_count = db.query(Student).filter(Student.academic_risk == "MID").count()
+    high_count = db.query(Student).filter(Student.academic_risk == "HIGH").count()
+    very_high_count = db.query(Student).filter(Student.academic_risk == "VERY_HIGH").count()
+
+    at_risk_count = very_low_count + low_count
+    low_risk_count = mid_count + high_count + very_high_count
     at_risk_rate = (at_risk_count / total_enrollments) * 100 if total_enrollments > 0 else 0
 
     avg_ca = db.query(func.avg(Student.ca_score)).scalar() or 0.0
     avg_att = db.query(func.avg(Student.attendance_percentage)).scalar() or 0.0
 
-    # Count high urgency cases (CA < 40 or attendance < 60)
-    high_urgency = db.query(Student).filter(
-        (Student.academic_risk == "AT_RISK") &
-        ((Student.ca_score < 40) | (Student.attendance_percentage < 60))
-    ).count()
+    # High urgency cases are VERY_LOW (Critical)
+    high_urgency = very_low_count
 
     return DashboardSummary(
         total_students=distinct_students,
         total_enrollments=total_enrollments,
+        very_low_count=very_low_count,
+        low_count=low_count,
+        mid_count=mid_count,
+        high_count=high_count,
+        very_high_count=very_high_count,
         at_risk_count=at_risk_count,
         low_risk_count=low_risk_count,
         at_risk_rate=round(at_risk_rate, 1),
@@ -66,12 +76,16 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 
 @router.get("/risk-by-programme", response_model=List[RiskByProgramme])
 def get_risk_by_programme(db: Session = Depends(get_db)):
-    """Risk breakdown across academic programmes."""
+    """Risk breakdown across academic programmes with 5 tiers."""
     rows = (
         db.query(
             Student.programme,
             func.count(Student.id).label("total"),
-            func.sum(case((Student.academic_risk == "AT_RISK", 1), else_=0)).label("at_risk")
+            func.sum(case((Student.academic_risk == "VERY_LOW", 1), else_=0)).label("very_low"),
+            func.sum(case((Student.academic_risk == "LOW", 1), else_=0)).label("low"),
+            func.sum(case((Student.academic_risk == "MID", 1), else_=0)).label("mid"),
+            func.sum(case((Student.academic_risk == "HIGH", 1), else_=0)).label("high"),
+            func.sum(case((Student.academic_risk == "VERY_HIGH", 1), else_=0)).label("very_high"),
         )
         .group_by(Student.programme)
         .all()
@@ -80,14 +94,24 @@ def get_risk_by_programme(db: Session = Depends(get_db)):
     results = []
     for r in rows:
         total = r.total or 0
-        at_risk = r.at_risk or 0
-        low = total - at_risk
+        vl = r.very_low or 0
+        l = r.low or 0
+        m = r.mid or 0
+        h = r.high or 0
+        vh = r.very_high or 0
+        at_risk = vl + l
+        low_risk = m + h + vh
         pct = (at_risk / total * 100) if total > 0 else 0.0
         results.append(RiskByProgramme(
             programme=r.programme,
             total=total,
+            very_low=vl,
+            low=l,
+            mid=m,
+            high=h,
+            very_high=vh,
             at_risk=at_risk,
-            low_risk=low,
+            low_risk=low_risk,
             risk_percentage=round(pct, 1)
         ))
 
@@ -99,7 +123,7 @@ def get_high_risk_students(limit: int = 10, db: Session = Depends(get_db)):
     """Get students most urgently in need of academic early intervention."""
     students = (
         db.query(Student)
-        .filter(Student.academic_risk == "AT_RISK")
+        .filter(Student.academic_risk.in_(["VERY_LOW", "LOW"]))
         .order_by(Student.ca_score.asc(), Student.attendance_percentage.asc())
         .limit(limit)
         .all()

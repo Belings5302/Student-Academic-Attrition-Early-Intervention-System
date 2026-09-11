@@ -84,14 +84,24 @@ def get_student_by_code(student_id: str, db: Session = Depends(get_db)):
 
     predictions = db.query(Prediction).filter(Prediction.student_id == student_id).order_by(desc(Prediction.predicted_at)).all()
 
-    # Generate current interventions for active/latest enrollment
+    # Calculate student overall averages
+    avg_ca = sum(e.ca_score for e in enrollments) / len(enrollments)
+    avg_att = sum(e.attendance_percentage for e in enrollments) / len(enrollments)
+    avg_test = sum(e.test_average for e in enrollments) / len(enrollments)
+    avg_asg = sum(e.assignment_average for e in enrollments) / len(enrollments)
+
+    vulnerable_courses = [
+        {"course_id": e.course_id, "course_name": e.course_name, "risk": e.academic_risk, "ca": e.ca_score}
+        for e in enrollments if e.academic_risk in ["VERY_LOW", "LOW"]
+    ]
+
     latest = enrollments[0]
     ml = get_ml_service()
     student_dict = {
-        "ca_score": latest.ca_score,
-        "assignment_average": latest.assignment_average,
-        "test_average": latest.test_average,
-        "attendance_percentage": latest.attendance_percentage,
+        "ca_score": avg_ca,
+        "assignment_average": avg_asg,
+        "test_average": avg_test,
+        "attendance_percentage": avg_att,
         "number_of_courses": latest.number_of_courses,
         "previous_semester_gpa": latest.previous_semester_gpa,
         "previous_failed_courses": latest.previous_failed_courses,
@@ -105,6 +115,10 @@ def get_student_by_code(student_id: str, db: Session = Depends(get_db)):
         "programme": latest.programme,
         "gender": latest.gender,
         "academic_year": latest.academic_year,
+        "average_ca": round(avg_ca, 1),
+        "average_attendance": round(avg_att, 1),
+        "vulnerable_courses_count": len(vulnerable_courses),
+        "vulnerable_courses": vulnerable_courses,
         "enrollments_count": len(enrollments),
         "enrollments": enrollments,
         "current_prediction": prediction,

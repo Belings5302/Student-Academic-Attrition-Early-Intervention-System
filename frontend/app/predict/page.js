@@ -16,6 +16,19 @@ import {
   ChevronRight
 } from 'lucide-react';
 
+const TIER_META = {
+  VERY_LOW: { label: 'Very Low (Critical)', badgeClass: 'tier-very-low', color: '#EF4444', icon: '🔴', desc: 'Critical Attrition Zone: Student is in severe failure danger. Immediate academic emergency intervention is required.' },
+  LOW: { label: 'Low', badgeClass: 'tier-low', color: '#F97316', icon: '🟠', desc: 'Notable Risk: Student is performing below benchmark. Targeted tutoring and weekly monitoring required.' },
+  MID: { label: 'Mid (Average)', badgeClass: 'tier-mid', color: '#F59E0B', icon: '🟡', desc: 'Average Standing: Acceptable performance with solid attendance. Active learning study groups recommended.' },
+  HIGH: { label: 'High', badgeClass: 'tier-high', color: '#10B981', icon: '🟢', desc: 'Strong Standing: Consistently good academic marks. Academic enrichment and elective mentorship recommended.' },
+  VERY_HIGH: { label: 'Very High', badgeClass: 'tier-very-high', color: '#06B6D4', icon: '🔵', desc: 'Exemplary Standing: Outstanding trajectory (>85% CA, >90% Att). Candidate for Dean\'s List and peer tutor leadership.' },
+};
+
+const getTier = (val) => {
+  const norm = String(val || 'MID').toUpperCase();
+  return TIER_META[norm] || { label: norm, badgeClass: 'tier-mid', color: '#F59E0B', icon: '⚪', desc: '' };
+};
+
 export default function PredictPage() {
   const [formData, setFormData] = useState({
     student_id: 'STU-SIMULATED',
@@ -35,50 +48,80 @@ export default function PredictPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
-  // Quick Preset Loader
+  // Quick Preset Loader for 5 Tiers
   function loadPreset(type) {
-    if (type === 'critical') {
+    if (type === 'very_low') {
       setFormData({
         student_id: 'STU-CRITICAL-01',
         enrollment_id: 'ENR-CRITICAL-01',
         programme: 'Software Engineering',
         course_name: 'Data Structures & Algorithms',
-        ca_score: 34.0,
-        assignment_average: 38.0,
-        test_average: 32.0,
-        attendance_percentage: 45.0,
+        ca_score: 32.0,
+        assignment_average: 36.0,
+        test_average: 30.0,
+        attendance_percentage: 46.0,
         number_of_courses: 6,
-        previous_semester_gpa: 1.8,
+        previous_semester_gpa: 1.6,
         previous_failed_courses: 2,
         attempt_number: 2,
       });
-    } else if (type === 'borderline') {
+    } else if (type === 'low') {
       setFormData({
         student_id: 'STU-BORDERLINE-02',
         enrollment_id: 'ENR-BORDERLINE-02',
         programme: 'Information Technology',
         course_name: 'Web Application Development',
-        ca_score: 49.0,
+        ca_score: 48.0,
         assignment_average: 52.0,
-        test_average: 48.0,
-        attendance_percentage: 68.0,
+        test_average: 46.0,
+        attendance_percentage: 64.0,
         number_of_courses: 5,
-        previous_semester_gpa: 2.4,
+        previous_semester_gpa: 2.3,
+        previous_failed_courses: 1,
+        attempt_number: 1,
+      });
+    } else if (type === 'mid') {
+      setFormData({
+        student_id: 'BBIS002-MATH',
+        enrollment_id: 'ENR-MID-03',
+        programme: 'Business Information Systems',
+        course_name: 'Business Mathematics',
+        ca_score: 62.0,
+        assignment_average: 64.0,
+        test_average: 60.0,
+        attendance_percentage: 76.0,
+        number_of_courses: 5,
+        previous_semester_gpa: 2.8,
         previous_failed_courses: 0,
         attempt_number: 1,
       });
-    } else if (type === 'safe') {
+    } else if (type === 'high') {
       setFormData({
-        student_id: 'STU-HONORS-03',
-        enrollment_id: 'ENR-HONORS-03',
+        student_id: 'STU-HIGH-04',
+        enrollment_id: 'ENR-HIGH-04',
+        programme: 'Computer Science',
+        course_name: 'Computer Networks',
+        ca_score: 78.0,
+        assignment_average: 82.0,
+        test_average: 76.0,
+        attendance_percentage: 86.0,
+        number_of_courses: 5,
+        previous_semester_gpa: 3.4,
+        previous_failed_courses: 0,
+        attempt_number: 1,
+      });
+    } else if (type === 'very_high') {
+      setFormData({
+        student_id: 'STU-HONORS-05',
+        enrollment_id: 'ENR-HONORS-05',
         programme: 'Data Science',
         course_name: 'Applied Machine Learning',
-        ca_score: 82.0,
-        assignment_average: 86.0,
-        test_average: 80.0,
-        attendance_percentage: 92.0,
+        ca_score: 92.0,
+        assignment_average: 94.0,
+        test_average: 90.0,
+        attendance_percentage: 96.0,
         number_of_courses: 5,
-        previous_semester_gpa: 3.6,
+        previous_semester_gpa: 3.9,
         previous_failed_courses: 0,
         attempt_number: 1,
       });
@@ -109,9 +152,9 @@ export default function PredictPage() {
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Real-Time Risk Simulator & Intervention Engine</h1>
+          <h1 className="page-title">5-Tier Real-Time Risk Simulator & Intervention Engine</h1>
           <p className="page-desc">
-            Simulate a student&apos;s continuous assessment and attendance telemetry to instantly evaluate attrition probability and generate tailored early interventions.
+            Simulate a student&apos;s continuous assessment and attendance telemetry to instantly evaluate risk across 5 tiers and generate tailored early interventions.
           </p>
         </div>
       </div>
@@ -134,15 +177,21 @@ export default function PredictPage() {
           <Sliders size={18} color="#818CF8" />
           <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Quick Archetype Presets:</span>
         </div>
-        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-          <button onClick={() => loadPreset('critical')} className="btn btn-secondary btn-sm" style={{ borderLeft: '3px solid #EF4444' }}>
-            🔴 Critical Risk Case
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button onClick={() => loadPreset('very_low')} className="btn btn-secondary btn-sm" style={{ borderLeft: '3px solid #EF4444' }}>
+            🔴 Very Low (Critical)
           </button>
-          <button onClick={() => loadPreset('borderline')} className="btn btn-secondary btn-sm" style={{ borderLeft: '3px solid #F59E0B' }}>
-            🟡 Borderline Struggling Case
+          <button onClick={() => loadPreset('low')} className="btn btn-secondary btn-sm" style={{ borderLeft: '3px solid #F97316' }}>
+            🟠 Low
           </button>
-          <button onClick={() => loadPreset('safe')} className="btn btn-secondary btn-sm" style={{ borderLeft: '3px solid #10B981' }}>
-            🟢 Low Risk / Honors Case
+          <button onClick={() => loadPreset('mid')} className="btn btn-secondary btn-sm" style={{ borderLeft: '3px solid #F59E0B' }}>
+            🟡 Mid (Average)
+          </button>
+          <button onClick={() => loadPreset('high')} className="btn btn-secondary btn-sm" style={{ borderLeft: '3px solid #10B981' }}>
+            🟢 High
+          </button>
+          <button onClick={() => loadPreset('very_high')} className="btn btn-secondary btn-sm" style={{ borderLeft: '3px solid #06B6D4' }}>
+            🔵 Very High
           </button>
         </div>
       </div>
@@ -318,62 +367,71 @@ export default function PredictPage() {
         <div>
           {result ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {/* Risk Summary Gauge Card */}
-              <div
-                className="card"
-                style={{
-                  borderColor: result.risk_level === 'AT_RISK' ? 'var(--risk-critical-border)' : 'var(--risk-low-border)',
-                  background: result.risk_level === 'AT_RISK'
-                    ? 'linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, rgba(18, 26, 44, 0.9) 100%)'
-                    : 'linear-gradient(180deg, rgba(16, 185, 129, 0.12) 0%, rgba(18, 26, 44, 0.9) 100%)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className={`badge ${result.risk_level === 'AT_RISK' ? 'danger' : 'success'}`} style={{ fontSize: '0.88rem' }}>
-                    {result.risk_level === 'AT_RISK' ? '🔴 HIGH ATTRITION DANGER' : '🟢 SATISFACTORY PROGRESS'}
-                  </span>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Model: {result.model_name}
-                  </span>
-                </div>
-
-                <div style={{ margin: '1.25rem 0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.5rem' }}>
-                    <div>
-                      <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Attrition Probability</div>
-                      <div
-                        style={{
-                          fontSize: '2.5rem',
-                          fontWeight: 800,
-                          color: result.risk_level === 'AT_RISK' ? '#F87171' : '#34D399',
-                          fontFamily: 'var(--font-display)',
-                        }}
-                      >
-                        {(result.at_risk_probability * 100).toFixed(1)}%
-                      </div>
+              {/* 5-Tier Risk Summary Card */}
+              {(() => {
+                const tier = getTier(result.risk_level);
+                return (
+                  <div
+                    className="card"
+                    style={{
+                      borderColor: tier.color,
+                      background: `linear-gradient(180deg, ${tier.color}18 0%, rgba(18, 26, 44, 0.95) 100%)`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <span className={`badge ${tier.badgeClass}`} style={{ fontSize: '0.92rem', padding: '0.45rem 0.9rem' }}>
+                        {tier.icon} {result.display_label || tier.label}
+                      </span>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        Model: {result.model_name}
+                      </span>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Retention Likelihood</div>
-                      <div style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                        {(result.low_probability * 100).toFixed(1)}%
+
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', marginTop: '1rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                      {tier.desc}
+                    </p>
+
+                    {/* 5-Tier Confidence Breakdown */}
+                    {result.probabilities && (
+                      <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Model Confidence Across 5 Tiers
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                          {Object.entries(result.probabilities).map(([tierKey, prob]) => {
+                            const t = getTier(tierKey);
+                            const pct = (prob * 100).toFixed(1);
+                            const isPredicted = tierKey === result.risk_level;
+                            return (
+                              <div key={tierKey}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.25rem' }}>
+                                  <span style={{ fontWeight: isPredicted ? 700 : 500, color: isPredicted ? t.color : 'var(--text-secondary)' }}>
+                                    {t.icon} {t.label} {isPredicted ? ' (Predicted)' : ''}
+                                  </span>
+                                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: isPredicted ? t.color : 'var(--text-muted)' }}>
+                                    {pct}%
+                                  </span>
+                                </div>
+                                <div className="progress-bar-bg" style={{ height: '6px' }}>
+                                  <div
+                                    style={{
+                                      width: `${Math.max(prob * 100, 2)}%`,
+                                      height: '100%',
+                                      background: t.color,
+                                      borderRadius: 'var(--radius-full)',
+                                      transition: 'width 0.4s ease',
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
-
-                  <div className="progress-bar-bg" style={{ height: '12px' }}>
-                    <div
-                      className={`progress-bar-fill ${result.risk_level === 'AT_RISK' ? 'danger' : 'success'}`}
-                      style={{ width: `${Math.max(result.at_risk_probability * 100, 4)}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  {result.risk_level === 'AT_RISK'
-                    ? 'Based on Continuous Assessment (<50%) and low attendance, this student is projected to fail or withdraw unless pre-exam intervention protocols are triggered immediately.'
-                    : 'The student maintains a healthy Continuous Assessment average and adequate attendance threshold, correlating with exam success and retention.'}
-                </p>
-              </div>
+                );
+              })()}
 
               {/* Actionable Interventions Generated */}
               <div className="card">

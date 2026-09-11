@@ -37,7 +37,9 @@ class InterventionItem(BaseModel):
 class PredictResponse(BaseModel):
     student_id: str
     enrollment_id: str
-    risk_level: str  # AT_RISK or LOW
+    risk_level: str  # VERY_LOW, LOW, MID, HIGH, VERY_HIGH
+    display_label: Optional[str] = None
+    probabilities: Optional[Dict[str, float]] = None
     at_risk_probability: float
     low_probability: float
     model_name: str
