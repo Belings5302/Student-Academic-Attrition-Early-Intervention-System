@@ -34,7 +34,8 @@ except ImportError:
 
 # --- Paths ---
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_FILE = os.path.join(PROJECT_DIR, "Student_Academic_Risk_Dataset_120_Year1_Semester1.xlsx")
+balanced_path = os.path.join(PROJECT_DIR, "Student_Academic_Risk_Dataset_Balanced.xlsx")
+DATA_FILE = balanced_path if os.path.exists(balanced_path) else os.path.join(PROJECT_DIR, "Student_Academic_Risk_Dataset_120_Year1_Semester1.xlsx")
 PROCESSED_DIR = os.path.join(PROJECT_DIR, "data_science", "data", "processed")
 MODELS_DIR = os.path.join(PROJECT_DIR, "data_science", "models")
 
@@ -96,14 +97,13 @@ def main():
     # ---------------------------------------------------------------
     # STEP 3: ENCODE & SPLIT
     # ---------------------------------------------------------------
-    print("\n[3/6] Encoding target & splitting data...")
+    print("\n[3/6] Encoding target & splitting data across 5 tiers...")
 
-    # Binary risk: LOW vs AT_RISK (MEDIUM + HIGH)
-    df["Risk_Binary"] = df["Academic_Risk"].map({"LOW": "LOW", "MEDIUM": "AT_RISK", "HIGH": "AT_RISK"})
-
+    # 5 Tiers: VERY_LOW, LOW, MID, HIGH, VERY_HIGH
+    tier_classes = ["VERY_LOW", "LOW", "MID", "HIGH", "VERY_HIGH"]
     le = LabelEncoder()
-    le.fit(["AT_RISK", "LOW"])
-    df["Risk_Binary_Encoded"] = le.transform(df["Risk_Binary"])
+    le.fit(tier_classes)
+    df["Risk_Encoded"] = le.transform(df["Academic_Risk"])
 
     feature_cols = [
         "CA_Score", "Assignment_Average", "Test_Average",
@@ -117,7 +117,7 @@ def main():
     ]
 
     X = df[feature_cols].values
-    y = df["Risk_Binary_Encoded"].values
+    y = df["Risk_Encoded"].values
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
@@ -130,7 +130,8 @@ def main():
     print(f"  Train: {X_train_scaled.shape[0]} samples")
     print(f"  Test:  {X_test_scaled.shape[0]} samples")
     print(f"  Classes: {le.classes_}")
-    print(f"  Train dist: AT_RISK={sum(y_train==0)}, LOW={sum(y_train==1)}")
+    for cls_name, cls_idx in zip(le.classes_, range(len(le.classes_))):
+        print(f"    - {cls_name}: {sum(y_train == cls_idx)} train, {sum(y_test == cls_idx)} test")
 
     # Save processed data
     df.to_csv(os.path.join(PROCESSED_DIR, "processed_data.csv"), index=False)
@@ -146,17 +147,17 @@ def main():
     # ---------------------------------------------------------------
     # STEP 4: TRAIN MODELS
     # ---------------------------------------------------------------
-    print("\n[4/6] Training models...")
+    print("\n[4/6] Training models for 5-tier classification...")
 
     models = {
         "Logistic Regression": LogisticRegression(
             class_weight="balanced", max_iter=1000, random_state=42
         ),
         "Decision Tree": DecisionTreeClassifier(
-            class_weight="balanced", max_depth=5, random_state=42
+            class_weight="balanced", max_depth=6, random_state=42
         ),
         "Random Forest": RandomForestClassifier(
-            n_estimators=100, class_weight="balanced", max_depth=10, random_state=42
+            n_estimators=150, class_weight="balanced", max_depth=12, random_state=42
         ),
         "SVM": SVC(
             class_weight="balanced", kernel="rbf", probability=True, random_state=42
@@ -164,12 +165,11 @@ def main():
     }
 
     if HAS_XGBOOST:
-        n_neg = sum(y_train == 0)
-        n_pos = sum(y_train == 1)
         models["XGBoost"] = XGBClassifier(
-            scale_pos_weight=n_neg / n_pos if n_pos > 0 else 1,
-            n_estimators=100, max_depth=5, learning_rate=0.1,
-            random_state=42, eval_metric="logloss"
+            objective="multi:softprob",
+            num_class=5,
+            n_estimators=120, max_depth=5, learning_rate=0.1,
+            random_state=42, eval_metric="mlogloss"
         )
 
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -180,7 +180,7 @@ def main():
         print(f"\n  Training: {name}...")
 
         # Cross-validation
-        cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=cv, scoring="f1_weighted")
+        cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=cv, scoring="f1_macro")
 
         # Train on full training set
         model.fit(X_train_scaled, y_train)
@@ -188,13 +188,17 @@ def main():
 
         # Evaluate on test set
         y_pred = model.predict(X_test_scaled)
-        y_proba = model.predict_proba(X_test_scaled)[:, 1] if hasattr(model, "predict_proba") else None
+        y_proba = model.predict_proba(X_test_scaled) if hasattr(model, "predict_proba") else None
 
         acc = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred, average="weighted", zero_division=0)
-        rec = recall_score(y_test, y_pred, average="weighted", zero_division=0)
-        f1 = f1_score(y_test, y_pred, average="weighted", zero_division=0)
-        auc_val = roc_auc_score(y_test, y_proba) if y_proba is not None else 0
+        prec = precision_score(y_test, y_pred, average="macro", zero_division=0)
+        rec = recall_score(y_test, y_pred, average="macro", zero_division=0)
+        f1 = f1_score(y_test, y_pred, average="macro", zero_division=0)
+        
+        try:
+            auc_val = roc_auc_score(y_test, y_proba, multi_class="ovr", average="macro") if y_proba is not None else 0
+        except Exception:
+            auc_val = 0.0
 
         results.append({
             "Model": name, "Accuracy": acc, "Precision": prec,
@@ -202,7 +206,7 @@ def main():
             "CV_F1_Mean": cv_scores.mean(), "CV_F1_Std": cv_scores.std()
         })
 
-        print(f"    Accuracy={acc:.4f}  Precision={prec:.4f}  Recall={rec:.4f}  F1={f1:.4f}  AUC={auc_val:.4f}  CV_F1={cv_scores.mean():.4f}")
+        print(f"    Accuracy={acc:.4f}  Precision={prec:.4f}  Recall={rec:.4f}  Macro-F1={f1:.4f}  AUC={auc_val:.4f}  CV_F1={cv_scores.mean():.4f}")
 
     # ---------------------------------------------------------------
     # STEP 5: SELECT BEST MODEL
@@ -239,14 +243,14 @@ def main():
         "roc_auc": float(results_df.iloc[0]["ROC-AUC"]),
         "features": feature_cols,
         "classes": list(le.classes_),
-        "target": "Risk_Binary (AT_RISK vs LOW)"
+        "target": "5-Tier Academic Risk (VERY_LOW, LOW, MID, HIGH, VERY_HIGH)"
     }
     joblib.dump(metadata, os.path.join(MODELS_DIR, "model_metadata.joblib"))
 
     # Print classification report for best model
     y_pred_best = best_model.predict(X_test_scaled)
     print(f"\n{'='*60}")
-    print(f"  {best_name} -- Final Classification Report")
+    print(f"  {best_name} -- Final Classification Report (5 Tiers)")
     print(f"{'='*60}")
     print(classification_report(y_test, y_pred_best, target_names=le.classes_, zero_division=0))
 

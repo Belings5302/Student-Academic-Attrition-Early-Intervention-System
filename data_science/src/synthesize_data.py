@@ -82,9 +82,9 @@ def generate_balanced_dataset(num_students=200, output_path=None):
     records = []
     enrollment_counter = 1
 
-    # Student archetypes to guarantee realistic and balanced classes:
-    # 50% Low Risk, 28% Medium Risk, 22% High Risk
-    archetype_choices = ["LOW"] * 50 + ["MEDIUM"] * 28 + ["HIGH"] * 22
+    # 5 Student archetypes to guarantee balanced classes across 5 tiers:
+    # VERY_LOW (Critical), LOW, MID (Average), HIGH, VERY_HIGH
+    archetype_choices = ["VERY_LOW", "LOW", "MID", "HIGH", "VERY_HIGH"] * 20
 
     for prog_idx, prog in enumerate(programmes):
         for s_idx in range(1, students_per_prog + 1):
@@ -93,57 +93,75 @@ def generate_balanced_dataset(num_students=200, output_path=None):
             archetype = random.choice(archetype_choices)
 
             # Assign student base traits based on archetype
-            if archetype == "LOW":
-                base_ability = np.random.normal(75, 8)
-                base_attendance = np.random.normal(86, 6)
-                course_load = random.choice([5, 5, 5, 5, 4])
-                prev_fails = 0
-                attempt_base = 1
-            elif archetype == "MEDIUM":
-                base_ability = np.random.normal(53, 5)
-                base_attendance = np.random.normal(68, 5)
-                course_load = random.choice([5, 5, 6, 6])
+            if archetype == "VERY_LOW":
+                base_ability = np.random.normal(32, 5)
+                base_attendance = np.random.normal(48, 5)
+                course_load = random.choice([5, 6, 7])
+                prev_fails = random.choice([1, 2, 3])
+                attempt_base = random.choice([1, 2])
+            elif archetype == "LOW":
+                base_ability = np.random.normal(48, 4)
+                base_attendance = np.random.normal(63, 4)
+                course_load = random.choice([5, 6])
                 prev_fails = random.choice([0, 1])
                 attempt_base = 1
-            else:  # HIGH
-                base_ability = np.random.normal(36, 6)
-                base_attendance = np.random.normal(50, 7)
-                course_load = random.choice([5, 6, 6, 7])
-                prev_fails = random.choice([0, 1, 2])
-                attempt_base = random.choice([1, 1, 2])
+            elif archetype == "MID":
+                base_ability = np.random.normal(62, 4)
+                base_attendance = np.random.normal(76, 3)
+                course_load = random.choice([4, 5, 5])
+                prev_fails = 0
+                attempt_base = 1
+            elif archetype == "HIGH":
+                base_ability = np.random.normal(77, 4)
+                base_attendance = np.random.normal(86, 3)
+                course_load = random.choice([4, 5, 5])
+                prev_fails = 0
+                attempt_base = 1
+            else:  # VERY_HIGH
+                base_ability = np.random.normal(90, 3)
+                base_attendance = np.random.normal(94, 2)
+                course_load = 5
+                prev_fails = 0
+                attempt_base = 1
 
             for course_id, course_name, difficulty in prog["courses"]:
                 # Specific course noise
-                att_noise = np.random.normal(0, 4)
+                att_noise = np.random.normal(0, 3)
                 attendance = np.clip(base_attendance + att_noise, 20.0, 100.0)
 
-                asg_noise = np.random.normal(0, 5)
+                asg_noise = np.random.normal(0, 4)
                 assignment = np.clip(base_ability * 0.6 + attendance * 0.35 + asg_noise, 15.0, 100.0)
 
-                test_noise = np.random.normal(0, 6)
+                test_noise = np.random.normal(0, 4)
                 test = np.clip(base_ability * 0.75 + attendance * 0.2 - difficulty + test_noise, 10.0, 100.0)
 
                 # CA score is weighted combination of continuous tests and assignments
-                ca_score = np.clip(test * 0.5 + assignment * 0.5 + np.random.normal(0, 1.5), 10.0, 100.0)
+                ca_score = np.clip(test * 0.5 + assignment * 0.5 + np.random.normal(0, 1.2), 10.0, 100.0)
 
                 # Final Exam score strongly driven by CA & Attendance
-                exam_noise = np.random.normal(0, 6)
+                exam_noise = np.random.normal(0, 5)
                 final_exam = np.clip(ca_score * 0.6 + test * 0.3 + attendance * 0.1 - difficulty * 0.5 + exam_noise, 10.0, 100.0)
 
                 # Overall combined final grade (40% CA + 60% Exam)
                 overall_grade = 0.4 * ca_score + 0.6 * final_exam
                 final_result = "PASS" if (overall_grade >= 50.0 and final_exam >= 45.0) else "FAIL"
 
-                # Academic Risk ground truth classification:
-                # HIGH: CA < 45 or Attendance < 60 or (CA < 50 and Attendance < 70)
-                # MEDIUM: CA < 55 or Attendance < 75
-                # LOW: CA >= 55 and Attendance >= 75
-                if ca_score < 45.0 or attendance < 60.0 or (ca_score < 50.0 and attendance < 70.0):
-                    risk = "HIGH"
-                elif ca_score < 55.0 or attendance < 75.0:
-                    risk = "MEDIUM"
-                else:
+                # 5-Tier Academic Risk / Performance ground truth classification:
+                # VERY_LOW: CA < 40 or Attendance < 55 (Critical Risk)
+                # LOW: CA < 55 or Attendance < 70 (Notable Risk / Below Standard)
+                # MID: CA < 70 or Attendance < 80 (Average / Borderline)
+                # HIGH: CA < 85 or Attendance < 90 (Strong / Good Standing)
+                # VERY_HIGH: CA >= 85 and Attendance >= 90 (Exemplary / Honors)
+                if ca_score < 40.0 or attendance < 55.0:
+                    risk = "VERY_LOW"
+                elif ca_score < 55.0 or attendance < 70.0:
                     risk = "LOW"
+                elif ca_score < 70.0 or attendance < 80.0:
+                    risk = "MID"
+                elif ca_score < 85.0 or attendance < 90.0:
+                    risk = "HIGH"
+                else:
+                    risk = "VERY_HIGH"
 
                 enrollment_type = "RETURNING" if attempt_base > 1 else "NEW"
 

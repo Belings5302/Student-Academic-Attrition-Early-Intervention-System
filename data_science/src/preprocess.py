@@ -87,10 +87,10 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def encode_target(df: pd.DataFrame) -> tuple:
-    """Encode the Academic_Risk target variable."""
+    """Encode the Academic_Risk target variable across 5 tiers."""
     le = LabelEncoder()
-    # Ensure consistent ordering: HIGH=0, LOW=1, MEDIUM=2
-    le.fit(["HIGH", "LOW", "MEDIUM"])
+    # 5 Tiers: VERY_LOW, LOW, MID, HIGH, VERY_HIGH
+    le.fit(["VERY_LOW", "LOW", "MID", "HIGH", "VERY_HIGH"])
     df = df.copy()
     df["Risk_Encoded"] = le.transform(df["Academic_Risk"])
     return df, le
