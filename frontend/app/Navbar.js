@@ -1,11 +1,35 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShieldAlert, LayoutDashboard, Users, Sparkles, BookOpen, Activity } from 'lucide-react';
+import {
+  ShieldAlert,
+  LayoutDashboard,
+  Users,
+  Sparkles,
+  BookOpen,
+  Sun,
+  Moon
+} from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    // Check saved preference or default to dark
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  function toggleTheme() {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+  }
 
   const navItems = [
     { href: '/', label: 'Overview', icon: LayoutDashboard },
@@ -43,9 +67,21 @@ export default function Navbar() {
         })}
       </nav>
 
-      <div className="nav-status">
-        <span className="status-dot"></span>
-        <span>ML Engine: Logistic Reg (98.4% Acc)</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+        <div className="nav-status">
+          <span className="status-dot"></span>
+          <span>ML Engine: Logistic Reg (98.4% Acc)</span>
+        </div>
+
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className="theme-toggle-btn"
+          aria-label="Toggle Dark/Light Mode"
+          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
       </div>
     </header>
   );

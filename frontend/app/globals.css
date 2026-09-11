@@ -66,6 +66,65 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+[data-theme="light"] {
+  /* Color Palette - Clean Executive Light */
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F1F5F9;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: #FFFFFF;
+  --bg-glass: rgba(0, 0, 0, 0.02);
+  --bg-glass-strong: rgba(0, 0, 0, 0.04);
+
+  --border-subtle: #E2E8F0;
+  --border-medium: #CBD5E1;
+  --border-bright: rgba(79, 70, 229, 0.4);
+
+  /* Typography Colors */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --text-inverse: #FFFFFF;
+
+  /* Accent Colors */
+  --primary: #4F46E5;
+  --primary-glow: rgba(79, 70, 229, 0.2);
+  --primary-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  --accent-cyan: #0891B2;
+  --accent-cyan-glow: rgba(8, 145, 178, 0.2);
+
+  /* Semantic Risk Colors */
+  --risk-critical: #DC2626;
+  --risk-critical-bg: #FEF2F2;
+  --risk-critical-border: #FCA5A5;
+  --risk-critical-glow: rgba(220, 38, 38, 0.15);
+
+  --risk-high: #E11D48;
+  --risk-high-bg: #FFF1F2;
+  --risk-high-border: #FDA4AF;
+
+  --risk-medium: #D97706;
+  --risk-medium-bg: #FFFBEB;
+  --risk-medium-border: #FCD34D;
+
+  --risk-low: #059669;
+  --risk-low-bg: #ECFDF5;
+  --risk-low-border: #6EE7B7;
+  --risk-low-glow: rgba(5, 150, 105, 0.15);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 10px -4px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 25px rgba(79, 70, 229, 0.15);
+  --shadow-glow-risk: 0 0 25px rgba(220, 38, 38, 0.12);
+
+  /* Fonts */
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -702,3 +761,176 @@ input[type="range"]::-webkit-slider-thumb:hover {
     padding: 1rem;
   }
 }
+
+/* ==========================================================================
+   Light Mode Overrides & Refinements
+   ========================================================================== */
+[data-theme="light"] body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .navbar {
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .brand-title {
+  background: linear-gradient(135deg, #0F172A 30%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .page-title {
+  background: linear-gradient(135deg, #0F172A 40%, #1E293B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .nav-links {
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+}
+
+[data-theme="light"] .nav-link {
+  color: #475569;
+}
+
+[data-theme="light"] .nav-link:hover {
+  color: #0F172A;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .nav-link.active {
+  background: var(--primary-gradient);
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .nav-status {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+
+[data-theme="light"] .card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .card:hover {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="light"] .kpi-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .kpi-card.alert {
+  background: linear-gradient(180deg, #FEF2F2 0%, #FFFFFF 100%);
+  border-color: #FECACA;
+}
+
+[data-theme="light"] .data-table th {
+  background: #F8FAFC;
+  color: #475569;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+[data-theme="light"] .data-table td {
+  border-bottom: 1px solid #F1F5F9;
+  color: #334155;
+}
+
+[data-theme="light"] .data-table tbody tr:hover {
+  background-color: #F8FAFC;
+}
+
+[data-theme="light"] .data-table tbody tr.row-danger {
+  background-color: rgba(254, 242, 242, 0.6);
+}
+
+[data-theme="light"] .data-table tbody tr.row-danger:hover {
+  background-color: rgba(254, 226, 226, 0.8);
+}
+
+[data-theme="light"] .badge.neutral {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #475569;
+}
+
+[data-theme="light"] .btn-secondary {
+  background: #FFFFFF;
+  color: #0F172A;
+  border-color: #CBD5E1;
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+}
+
+[data-theme="light"] .form-control {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
+}
+
+[data-theme="light"] .form-control:focus {
+  border-color: #4F46E5;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+[data-theme="light"] input[type="range"] {
+  background: #E2E8F0;
+}
+
+[data-theme="light"] .progress-bar-bg {
+  background: #E2E8F0;
+}
+
+[data-theme="light"] .modal-overlay {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+[data-theme="light"] .modal-content {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="light"] body::before {
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, rgba(79, 70, 229, 0) 70%);
+}
+
+[data-theme="light"] body::after {
+  background: radial-gradient(circle, rgba(8, 145, 178, 0.04) 0%, rgba(8, 145, 178, 0) 70%);
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--primary);
+  transform: rotate(15deg);
+}
+
